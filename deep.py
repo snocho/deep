@@ -3,6 +3,7 @@ import bs4
 import logging
 import csv
 import re
+import configparser
 import pandas as pd
 import numpy as np
 from unidecode import unidecode
@@ -319,11 +320,17 @@ if __name__ == '__main__':
     logging.basicConfig()
     logger = logging.getLogger('main')
     logger.setLevel(logging.DEBUG)
-    c = Crawler('input.txt', 'output_train.csv', 'output_test.csv')
-    b = GetWordVectors(stop_words_file='stopwords2.txt',
-            file_name_train='output_train.csv',
-            file_name_test='output_test.csv',
-            output_file='output.csv',
-            word2vec_model_file='input.bin',
-            mode='w2v')
+    
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+
+    c = Crawler(config.get('FilmwebCrawler', 'input_file'),
+                config.get('FilmwebCrawler', 'output_file_train'),
+                config.get('FilmwebCrawler', 'output_file_test'))
+    b = GetWordVectors(stop_words_file=config.get('BOW', 'stop_words_file'),
+                       file_name_train=config.get('BOW', 'file_name_train'),
+                       file_name_test=config.get('BOW', 'file_name_test'),
+                       output_file=config.get('BOW', 'output_file'),
+                       word2vec_model_file=config.get('BOW', 'w2v_model_file'),
+                       mode=config.get('BOW', 'mode'))
 
