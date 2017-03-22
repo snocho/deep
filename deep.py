@@ -112,7 +112,7 @@ class Crawler:
         outfile_train.to_csv(self.output_file_train, quoting=3, index_label='id', sep='\t')
 
 class GetWordVectors:
-    def __init__(self, stop_words_file, file_name_train, file_name_test, output_file, word2vec_model_file, num_features=300, mode='w2v'):
+    def __init__(self, stop_words_file, file_name_train, file_name_test, output_file, word2vec_model_file, binary_w2v_format, num_features=300, mode='w2v'):
         self.logger = logging.getLogger('main.' + self.__class__.__name__)
 
         self.output_file = output_file
@@ -165,7 +165,7 @@ class GetWordVectors:
 
         elif self.mode == 'w2v' or self.mode == 'both':
             # load W2V model
-            self.load_word_2_vec(word2vec_model_file)
+            self.load_word_2_vec(word2vec_model_file, binary_w2v_format)
             
             train_feature_vecs = self.get_avg_feature_vec(self.clean_train)
             test_feature_vecs = self.get_avg_feature_vec(self.clean_test)
@@ -200,9 +200,9 @@ class GetWordVectors:
         # back to strings
         return (' '.join(meaningful_words))
 
-    def load_word_2_vec(self, word2vec_model_file):
+    def load_word_2_vec(self, word2vec_model_file, binary_w2v_format):
         self.logger.info('Word 2 vec model loading: {}'.format(word2vec_model_file))
-        self.model = KeyedVectors.load_word2vec_format(word2vec_model_file, binary=True)
+        self.model = KeyedVectors.load_word2vec_format(word2vec_model_file, binary=binary_w2v_format, unicode_errors='ignore')
 
     def make_feature_vec(self, words):
         self.logger.debug('Make feature vectors')
@@ -309,7 +309,7 @@ class GetWordVectors:
             for i in range(0, len(self.result_w2v)):
                 if int(self.result_w2v[i]) >= 6 and int(self.test['score'][i] >= 6):
                     score += 1
-                elif int(self.result_w2v[i]) < 5 and int(self.test['score'][i] < 5):
+                elif int(self.result_w2v[i]) < 6 and int(self.test['score'][i] < 6):
                     score += 1
 
             self.logger.info('Predicted w2v correct: {}/{} {:3.2f}%'.format(score, len(self.clean_test), score/len(self.clean_test)*100))
@@ -319,7 +319,7 @@ class GetWordVectors:
 if __name__ == '__main__':
     logging.basicConfig()
     logger = logging.getLogger('main')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -332,5 +332,7 @@ if __name__ == '__main__':
                        file_name_test=config.get('BOW', 'file_name_test'),
                        output_file=config.get('BOW', 'output_file'),
                        word2vec_model_file=config.get('BOW', 'w2v_model_file'),
+                       binary_w2v_format=config.get('BOW', 'binary_w2v_format'),
+                       num_features=int(config.get('BOW', 'num_features')),
                        mode=config.get('BOW', 'mode'))
 
