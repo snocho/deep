@@ -231,7 +231,9 @@ class GetWordVectors:
                 nwords += 1
                 feature_vec = np.add(feature_vec, self.model[word])
 
-        feature_vec = np.divide(feature_vec, nwords)
+        if nwords:
+            feature_vec = np.divide(feature_vec, nwords)
+
         return feature_vec
 
     def get_avg_feature_vec(self, clean_reviews):
