@@ -1,4 +1,5 @@
 import requests
+import os
 import bs4
 import logging
 import csv
@@ -108,8 +109,12 @@ class Crawler:
         outfile_test = pd.DataFrame(data=review_test, columns=['review', 'score'])
         outfile_train = pd.DataFrame(data=review_train, columns=['review', 'score'])
         
-        outfile_test.to_csv(self.output_file_test, quoting=3, index_label='id', sep='\t')
-        outfile_train.to_csv(self.output_file_train, quoting=3, index_label='id', sep='\t')
+        if os.path.exists(self.output_file_test) and os.path.exists(self.output_file_train):
+            outfile_test.to_csv(self.output_file_test, header=False, quoting=3, index_label='id', sep='\t', mode='a')
+            outfile_train.to_csv(self.output_file_train, header=False, quoting=3, index_label='id', sep='\t', mode='a')
+        else:
+            outfile_test.to_csv(self.output_file_test, quoting=3, index_label='id', sep='\t', mode='a')
+            outfile_train.to_csv(self.output_file_train, quoting=3, index_label='id', sep='\t', mode='a')
 
 class GetWordVectors:
     def __init__(self, stop_words_file, file_name_train, file_name_test, output_file, word2vec_model_file, binary_w2v_format, num_features=300, mode='w2v'):
@@ -167,8 +172,16 @@ class GetWordVectors:
             # load W2V model
             self.load_word_2_vec(word2vec_model_file, binary_w2v_format)
             
-            train_feature_vecs = self.get_avg_feature_vec(self.clean_train)
-            test_feature_vecs = self.get_avg_feature_vec(self.clean_test)
+            # in order of further processing we need vectors of words instead of sentences
+            clean_train_list = []
+            clean_test_list = []
+            for c in self.clean_train:
+                clean_train_list.append(list(c.split(' ')))
+            for c in self.clean_test:
+                clean_test_list.append(list(c.split(' ')))
+
+            train_feature_vecs = self.get_avg_feature_vec(clean_train_list)
+            test_feature_vecs = self.get_avg_feature_vec(clean_test_list)
 
             self.classify(train_feature_vecs)
 
@@ -319,7 +332,7 @@ class GetWordVectors:
 if __name__ == '__main__':
     logging.basicConfig()
     logger = logging.getLogger('main')
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     
     config = configparser.ConfigParser()
     config.read('config.ini')
