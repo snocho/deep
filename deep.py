@@ -315,7 +315,7 @@ class GetWordVectors:
             for i in range(0, len(self.result_bow)):
                 if int(self.result_bow[i]) >= 6 and int(self.test['score'][i] >= 6):
                     score += 1
-                elif int(self.result_bow[i]) < 5 and int(self.test['score'][i] < 5):
+                elif int(self.result_bow[i]) < 6 and int(self.test['score'][i] < 6):
                     score += 1
         
             self.logger.info('Predicted bow correct: {}/{} {:3.2f}%'.format(score, len(self.clean_test), score/len(self.clean_test)*100))
