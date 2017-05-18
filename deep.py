@@ -80,7 +80,11 @@ class Crawler:
                     # if review contains message about being a spoiler - then remove it
                     if len(review[2]) == 65:
                         review[2] == ''
-                    self.reviews.append(review)
+                    # if review contains message about being blocked - then remove it
+                    if review[0].startswith("Wpis"):
+                        continue
+                    else:
+                        self.reviews.append(review)
 
         self.logger.info('total number of complete reviews to save: {}'.format(len(self.reviews)))
 
