@@ -121,10 +121,9 @@ class Crawler:
             outfile_train.to_csv(self.output_file_train, quoting=3, index_label='id', sep='\t', mode='a')
 
 class GetWordVectors:
-    def __init__(self, stop_words_file, file_name_train, file_name_test, output_file, word2vec_model_file, binary_w2v_format, num_features=300, mode='w2v'):
+    def __init__(self, stop_words_file, file_name_train, file_name_test, word2vec_model_file, binary_w2v_format, num_features=300, mode='w2v'):
         self.logger = logging.getLogger('main.' + self.__class__.__name__)
 
-        self.output_file = output_file
         self.num_features = num_features
         self.mode = mode
 
@@ -172,7 +171,7 @@ class GetWordVectors:
             # run tests
             self.result_bow = self.run_test_bow()
 
-        elif self.mode == 'w2v' or self.mode == 'both':
+        if self.mode == 'w2v' or self.mode == 'both':
             # load W2V model
             self.load_word_2_vec(word2vec_model_file, binary_w2v_format)
             
@@ -301,7 +300,6 @@ class GetWordVectors:
         return result
 
     def write_results(self):
-        self.logger.info('Write results to file: {}'.format(self.output_file))
         if self.mode == 'bow':
             data = {'review': self.clean_test, 'score_predict_bow':self.result_bow, 'score':self.test['score']}
         elif self.mode == 'w2v':
@@ -333,12 +331,22 @@ class GetWordVectors:
 
             self.logger.info('Predicted w2v correct: {}/{} {:3.2f}%'.format(score, len(self.clean_test), score/len(self.clean_test)*100))
 
-        output.to_csv(self.output_file, index=False, quoting=3)
+        # calculate results when both method combined
+        if self.mode == 'both':
+            score = 0
+            for i in range(0, len(self.result_w2v)):
+                if int(int(self.result_w2v[i]) + int(self.result_bow[i])/2) >= 6 and int(self.test['score'][i] >= 6):
+                    score += 1
+                elif int(int(self.result_w2v[i]) + int(self.result_bow[i])/2) < 6 and int(self.test['score'][i] < 6):
+                    score += 1
+
+            self.logger.info('Predicted w2v and bow combined correct: {}/{} {:3.2f}%'.format(score, len(self.clean_test), score/len(self.clean_test)*100))
 
 if __name__ == '__main__':
     logging.basicConfig()
     logger = logging.getLogger('main')
     logger.setLevel(logging.DEBUG)
+    logging.getLogger('gensim.models.keyedvectors').setLevel(logging.ERROR)
     
     config = configparser.ConfigParser()
     config.read('config.ini')
@@ -349,7 +357,6 @@ if __name__ == '__main__':
     b = GetWordVectors(stop_words_file=config.get('BOW', 'stop_words_file'),
                        file_name_train=config.get('BOW', 'file_name_train'),
                        file_name_test=config.get('BOW', 'file_name_test'),
-                       output_file=config.get('BOW', 'output_file'),
                        word2vec_model_file=config.get('BOW', 'w2v_model_file'),
                        binary_w2v_format=config.get('BOW', 'binary_w2v_format'),
                        num_features=int(config.get('BOW', 'num_features')),
