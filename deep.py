@@ -171,24 +171,24 @@ class GetWordVectors:
             # run tests
             self.result_bow = self.run_test_bow()
 
-        if self.mode == 'w2v' or self.mode == 'both':
-            # load W2V model
-            self.load_word_2_vec(word2vec_model_file, binary_w2v_format)
+            if self.mode == 'w2v' or self.mode == 'both':
+                # load W2V model
+                self.load_word_2_vec(word2vec_model_file, binary_w2v_format)
             
-            # in order of further processing we need vectors of words instead of sentences
-            clean_train_list = []
-            clean_test_list = []
-            for c in self.clean_train:
-                clean_train_list.append(list(c.split(' ')))
-            for c in self.clean_test:
-                clean_test_list.append(list(c.split(' ')))
+                # in order of further processing we need vectors of words instead of sentences
+                clean_train_list = []
+                clean_test_list = []
+                for c in self.clean_train:
+                    clean_train_list.append(list(c.split(' ')))
+                for c in self.clean_test:
+                    clean_test_list.append(list(c.split(' ')))
 
-            train_feature_vecs = self.get_avg_feature_vec(clean_train_list)
-            test_feature_vecs = self.get_avg_feature_vec(clean_test_list)
+                train_feature_vecs = self.get_avg_feature_vec(clean_train_list)
+                test_feature_vecs = self.get_avg_feature_vec(clean_test_list)
 
-            self.classify(train_feature_vecs)
+                self.classify(train_feature_vecs)
 
-            self.result_w2v = self.run_test_w2v(test_feature_vecs)
+                self.result_w2v = self.run_test_w2v(test_feature_vecs)
         else:
             self.logger.critical('Mode not recognized: {}'.format(self.mode))
             exit(1)
@@ -274,12 +274,12 @@ class GetWordVectors:
 
     def classify(self, train_data_vec):
         self.logger.info('Create classifier')
-#        self.forest = RandomForestClassifier(n_estimators=100)
-        self.regression = LogisticRegression(n_jobs=8)
+        self.forest = RandomForestClassifier(n_estimators=100)
+#        self.regression = LogisticRegression(n_jobs=8)
 
         self.logger.info('Fit classifier')
-#        self.forest = self.forest.fit(train_data_vec, self.train['score'])
-        self.regression = self.regression.fit(train_data_vec, self.train['score'])
+        self.regression = self.forest.fit(train_data_vec, self.train['score'])
+#        self.regression = self.regression.fit(train_data_vec, self.train['score'])
         
     def run_test_bow(self):
         self.logger.info('Run tests...')
