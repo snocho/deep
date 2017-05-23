@@ -6,6 +6,9 @@ __pycache__/
 # csv results files
 *.csv
 
+# w2v bin files
+w2v*
+
 # C extensions
 *.so
 

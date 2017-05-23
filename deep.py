@@ -1,4 +1,5 @@
 import requests
+import time
 import os
 import bs4
 import logging
@@ -348,17 +349,19 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
     logging.getLogger('gensim.models.keyedvectors').setLevel(logging.ERROR)
     
+    timestr = time.strftime('%Y%m%d-%H%M%S_') 
+
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    c = Crawler(config.get('FilmwebCrawler', 'input_file'),
-                config.get('FilmwebCrawler', 'output_file_train'),
-                config.get('FilmwebCrawler', 'output_file_test'))
-    b = GetWordVectors(stop_words_file=config.get('BOW', 'stop_words_file'),
-                       file_name_train=config.get('BOW', 'file_name_train'),
-                       file_name_test=config.get('BOW', 'file_name_test'),
-                       word2vec_model_file=config.get('BOW', 'w2v_model_file'),
-                       binary_w2v_format=config.get('BOW', 'binary_w2v_format'),
-                       num_features=int(config.get('BOW', 'num_features')),
-                       mode=config.get('BOW', 'mode'))
+    c = Crawler(input_file=config.get('FilmwebCrawler', 'input_file'),
+                output_file_train=timestr + config.get('FilmwebCrawler', 'output_file_train'),
+                output_file_test=timestr +  config.get('FilmwebCrawler', 'output_file_test'))
+    b = GetWordVectors(stop_words_file=config.get('WordVector', 'stop_words_file'),
+                       file_name_train=timestr + config.get('WordVector', 'file_name_train'),
+                       file_name_test=timestr + config.get('WordVector', 'file_name_test'),
+                       word2vec_model_file=config.get('WordVector', 'w2v_model_file'),
+                       binary_w2v_format=config.get('WordVector', 'binary_w2v_format'),
+                       num_features=int(config.get('WordVector', 'num_features')),
+                       mode=config.get('WordVector', 'mode'))
 
