@@ -122,11 +122,12 @@ class Crawler:
             outfile_train.to_csv(self.output_file_train, quoting=3, index_label='id', sep='\t', mode='a')
 
 class GetWordVectors:
-    def __init__(self, stop_words_file, file_name_train, file_name_test, word2vec_model_file, binary_w2v_format, num_features=300, mode='w2v'):
+    def __init__(self, stop_words_file, file_name_train, file_name_test, word2vec_model_file, binary_w2v_format, file_name_output, num_features=300, mode='w2v'):
         self.logger = logging.getLogger('main.' + self.__class__.__name__)
 
         self.num_features = num_features
         self.mode = mode
+        self.file_name_output = file_name_output
 
         self.logger.info('Reading input train data from file: {}'.format(file_name_train))
         self.train = pd.read_csv(file_name_train, header=0, delimiter='\t', quoting=3)
@@ -164,13 +165,14 @@ class GetWordVectors:
         self.result_bow = None
         self.result_w2v = None
 
-        if self.mode == 'bow' or self.mode == 'both':
-            # run classification
-            train_feature_vecs = self.get_feature_vec()
-            self.classify(train_feature_vecs)
+        if self.mode == 'bow' or self.mode == 'w2v' or self.mode == 'both':
+            if self.mode == 'bow' or self.mode == 'both':
+                # run classification
+                train_feature_vecs = self.get_feature_vec()
+                self.classify(train_feature_vecs)
 
-            # run tests
-            self.result_bow = self.run_test_bow()
+                # run tests
+                self.result_bow = self.run_test_bow()
 
             if self.mode == 'w2v' or self.mode == 'both':
                 # load W2V model
@@ -304,9 +306,9 @@ class GetWordVectors:
         if self.mode == 'bow':
             data = {'review': self.clean_test, 'score_predict_bow':self.result_bow, 'score':self.test['score']}
         elif self.mode == 'w2v':
-            data = {'review': self.clean_test, 'score_predict_w2v':self.result_w2v, 'score':self.test['score']}
+            data = {'review': self.clean_test, 'score_predict_w2v':pd.Series(data=self.result_w2v), 'score':self.test['score']}
         elif self.mode == 'both':
-            data = {'review': self.clean_test, 'score_predict_bow':self.result_bow, 'score_predict_w2v': self.result_w2v, 'score':self.test['score']}
+            data = {'review': self.clean_test, 'score_predict_bow':self.result_bow, 'score_predict_w2v': pd.Series(data=self.result_w2v), 'score':self.test['score']}
 
         output = pd.DataFrame(data)
 
@@ -343,6 +345,8 @@ class GetWordVectors:
 
             self.logger.info('Predicted w2v and bow combined correct: {}/{} {:3.2f}%'.format(score, len(self.clean_test), score/len(self.clean_test)*100))
 
+        output.to_csv(self.file_name_output, index=False, quoting=3)
+
 if __name__ == '__main__':
     logging.basicConfig()
     logger = logging.getLogger('main')
@@ -363,5 +367,6 @@ if __name__ == '__main__':
                        word2vec_model_file=config.get('WordVector', 'w2v_model_file'),
                        binary_w2v_format=config.get('WordVector', 'binary_w2v_format'),
                        num_features=int(config.get('WordVector', 'num_features')),
-                       mode=config.get('WordVector', 'mode'))
+                       mode=config.get('WordVector', 'mode'),
+                       file_name_output=timestr + config.get('WordVector', 'file_name_output'))
 
